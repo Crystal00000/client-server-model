@@ -38,7 +38,6 @@ public:
 
 	bool inv_exist(string inviter_email);
 	bool inv_code_correct(string room_id, unsigned long inv_code);
-	// void leave_room();
 	void Login(int conn);
 	void Logout();
 };
@@ -52,7 +51,6 @@ public:
 	vector<USR_INFO*> players;
 	GAME* game = NULL;
 
-	void start();
 	void stop();
 	void leave(USR_INFO* player, map<string, ROOM*>& rooms);
 	void delete_room();
@@ -69,45 +67,39 @@ bool USR_INFO::inv_exist(string inviter_email) {
 	cout << "return false\n";
 	return false;
 }
+
 bool USR_INFO::inv_code_correct(string room_id, unsigned long inv_code) {
 	map<string, ROOM*>::iterator inv_it = this->invs.find(room_id);
 	return (inv_it->second->inv_code == inv_code);
 }
+
 void USR_INFO::Login(int conn){
 	this->conn=conn;
 	this->login=1;
 }
+
 void USR_INFO::Logout(){
 	this->conn=-1;
 	this->login=0;
 }
 
-
-void ROOM::start() {
-
-}
 void ROOM::stop() {
-	// have to do somthing here?!
 	playing = false;
 }
+
 void ROOM::leave(USR_INFO* player, map<string, ROOM*>& rooms) {
 	string tmp_room_id = player->room_id;
-	// player->invs.erase(player->room_id);
 	player->room_id = "";
-	cout << "before remove, map size = " << players.size() << "\n";
-	// players.erase(players.find(player));
+	// cout << "before remove, map size = " << players.size() << "\n";
 	players.erase(remove(players.begin(), players.end(), player), players.end());
-	cout << "after remove, map size = " << players.size() << "\n";
+	// cout << "after remove, map size = " << players.size() << "\n";
 
 	if (playing) stop();
 	if (players.empty()) {
-		cout << "players is empty, FREE\n";
-		// free(this);
+		// cout << "players is empty, FREE\n";
 		rooms.erase(tmp_room_id);
 	}
 }
-
-
 
 void* Handle(void *data);
 typedef void * (*THREADFUNCPTR)(void *);
@@ -125,7 +117,6 @@ vector<string> split (const string &s, char delim) {
     }
     return result;
 }
-
 
 struct ARGS {
     int argc;
@@ -152,20 +143,22 @@ public:
 		this->round = round;
 		this->cur_guesser_idx = 0;
 	}
+
 	void setRandomAns() {
 		for (int i = 0; i < 4; ++i) {
 			ans[i] = (rand() % 10) + '0';
 		}
 	}
+
 	bool setCustomAns(string str_num) {
 		if (is_valid(str_num)) {
 			strcpy(ans, str_num.c_str());
-			// printSetAns();
 			return true;
 		} else {
 			return false;
 		}
 	}
+	
 	void printSetAns() {
 		cout << "Set answer as ";
 		for (int i = 0; i < 4; ++i) {
@@ -208,6 +201,7 @@ public:
 		
 		return response;
 	}
+
 	string guess(USR_INFO* player, string guess) {
 		cout << "round == " << round << "\n";
 		string response =  check(guess);
@@ -227,44 +221,8 @@ public:
 				cur_guesser_idx = 0;
 				--round;
 			}
-			
-		}
-		
-		
+		}	
 		return response;
-	}
-	string start() { // to be partitioned
-		while (round--) {
-			for (auto player_it : room->players) {
-			}
-		}
-		/*
-		while (chance != 0) {
-			memset(buf,0,sizeof(buf));
-			int n = recv(connfd, buf, MAXLINE, 0);
-			buf[n] = '\0';
-			
-			if(!is_valid(buf)) {
-				response = "Your guess should be a 4-digit number.";
-			} else {
-				--chance;
-				response = check(buf);
-			}
-			if (response == "You got the answer!") {
-				return response;
-			} else {
-				if (chance == 0) {
-					response = response + "\nYou lose the game!";
-					return response;
-				}
-				memset(buf, 0, sizeof(buf));
-				strcpy(buf, response.c_str());	
-				if ((send(connfd, buf, sizeof(buf), 0)) < 0) {
-					printf("\tTCP sends response failed\n");
-				}
-			}
-		}
-		*/
 	}
 };
 
@@ -292,10 +250,11 @@ public:
 	void broadcast(int conn, string msg);
 	void leave_by_exit(string cur_username, int conn);
 };
+
 void MAINSERVER::leave_by_exit(string cur_username, int conn){
 	map<string, USR_INFO*>::iterator user_it;
 	user_it = usrname.find(cur_username);
-	cout<<"leaver: "<<cur_username<<"\n";
+	// cout<<"leaver: "<<cur_username<<"\n";
 	if (cur_username != "" && user_it->second->room_id.size()) {
 		map<string, ROOM*>::iterator room_it;
 		room_it = rooms.find(user_it->second->room_id);
@@ -311,6 +270,7 @@ void MAINSERVER::leave_by_exit(string cur_username, int conn){
 		} 
 	}			
 }
+
 string MAINSERVER::ls_rooms(){
 	string room_list = "List Game Rooms";
 	if (rooms.empty()) {
@@ -329,6 +289,7 @@ string MAINSERVER::ls_rooms(){
 	}
 	return room_list;
 }
+
 string MAINSERVER::ls_users(){
 	string user_list = "List Users";
 	if (usrname.empty()) {
@@ -345,6 +306,7 @@ string MAINSERVER::ls_users(){
 	}
 	return user_list;
 }
+
 string MAINSERVER::ls_invs(string recv, string &cur_username, int conn){
 	string inv_list = "List invitations";
 	map<string, USR_INFO*>::iterator user_it;
@@ -370,11 +332,13 @@ string MAINSERVER::ls_invs(string recv, string &cur_username, int conn){
 	}
 	return inv_list;
 }
+
 string MAINSERVER::gm_rl(string recv){
 	string game_rule;
 	game_rule = "1. Each question is a 4-digit secret number.\n2. After each guess, you will get a hint with the following information:\n2.1 The number of \"A\", which are digits in the guess that are in the correct position.\n2.2 The number of \"B\", which are digits in the guess that are in the answer but are in the wrong position.\nThe hint will be formatted as \"xAyB\".\n3. 5 chances for each question.";
 	return game_rule;
 }
+
 string MAINSERVER::regst(string recv){
 	vector<string> cmd = split (recv, ' ');
 	string response;
@@ -405,8 +369,8 @@ string MAINSERVER::regst(string recv){
 		}	
 	}
 	return response;
-
 }
+
 string MAINSERVER::login (string recv, string &cur_username, int conn) {
 	vector<string> cmd = split (recv, ' ');
 	string response;
@@ -427,10 +391,7 @@ string MAINSERVER::login (string recv, string &cur_username, int conn) {
 			} else {
 				response = "Welcome, " + cmd[1];
 				usrname[cmd[1]]->Login(conn);
-				// usrname[cmd[1]]->login = 1;
-				// usrname[cmd[1]]->conn = conn;
 				cur_username = cmd[1];
-
 			}
 		} else {
 			response = "Username does not exist";
@@ -438,13 +399,14 @@ string MAINSERVER::login (string recv, string &cur_username, int conn) {
 	}
 	return response;
 }
+
 string MAINSERVER::logout(string recv, string &cur_username, int conn) {
 	vector<string> cmd = split (recv, ' ');
 	string response;
 
 	if (cmd.size() != 1) {
 		response = "Usage: logout";
-	} else { // have to know name first
+	} else { 
 		map<string, USR_INFO*>::iterator n_it;
 		n_it = usrname.find(cur_username);
 			
@@ -463,6 +425,7 @@ string MAINSERVER::logout(string recv, string &cur_username, int conn) {
 	}
 	return response;
 }
+
 string MAINSERVER::create_public(string recv, string &cur_username, int conn){
 	vector<string> cmd = split (recv, ' ');
 	string response;
@@ -486,9 +449,7 @@ string MAINSERVER::create_public(string recv, string &cur_username, int conn){
 					ROOM* tmp = new ROOM{.ID = cmd[3], .manager = user_it->second, .pblc = true, .playing = false, .inv_code = 0};
 					tmp->players.push_back(user_it->second);
 					rooms[cmd[3]] = tmp;
-
-					response = "You create public game room " + cmd[3];	
-					
+					response = "You create public game room " + cmd[3];						
 				} else {
 					response = "Game room ID is used, choose another one";
 				}
@@ -499,6 +460,7 @@ string MAINSERVER::create_public(string recv, string &cur_username, int conn){
 	}
 	return response;
 }
+
 string MAINSERVER::create_private(string recv, string &cur_username, int conn){
 	vector<string> cmd = split (recv, ' ');
 	string response;
@@ -507,7 +469,6 @@ string MAINSERVER::create_private(string recv, string &cur_username, int conn){
 		response = "Usage: create private room <game room id> <invitation code>";
 	} else {
 		if (cur_username == "") {
-			// cout << "cur_username is \"\"\n";
 			response = "You are not logged in";
 		} else {
 			// cout << "cur_username is " << cur_username << "\n";
@@ -528,13 +489,12 @@ string MAINSERVER::create_private(string recv, string &cur_username, int conn){
 				}		
 			} else {
 				response = "You are already in game room " + user_it->second->room_id + ", please leave game room";
-			}
-			
-			
+			}			
 		}	
 	}
 	return response;
 }
+
 string MAINSERVER::startgame(string recv, string &cur_username) {
 	vector<string> cmd = split (recv, ' ');
 	string response;
@@ -577,11 +537,8 @@ string MAINSERVER::startgame(string recv, string &cur_username) {
 							broadcast(player_it->conn, response);
 						}
 						room_it->second->playing = true;
-						room_it->second->players[room_it->second->game->cur_guesser_idx]->name = cur_username;
-						
-						// game->start();			
-					}
-					
+						room_it->second->players[room_it->second->game->cur_guesser_idx]->name = cur_username;								
+					}					
 				}
 			}
 		}	
@@ -589,6 +546,7 @@ string MAINSERVER::startgame(string recv, string &cur_username) {
 	return response;
 	
 }
+
 string MAINSERVER::guess(string recv, string &cur_username) {
 	vector<string> cmd = split (recv, ' ');
 	string response;
@@ -630,7 +588,6 @@ string MAINSERVER::guess(string recv, string &cur_username) {
 						}
 					}
 				}
-				
 			}
 		}	
 	}
@@ -682,6 +639,7 @@ string MAINSERVER::join(string recv, string &cur_username, int conn){
 	}
 	return response;
 }
+
 string MAINSERVER::leave(string recv, string &cur_username, int conn){
 	vector<string> cmd = split (recv, ' ');
 	string response;
@@ -720,8 +678,7 @@ string MAINSERVER::leave(string recv, string &cur_username, int conn){
 						for (auto player_it : room_it->second->players) {								
 							string msg = cur_username + " leave game room " + tmp_room_id + ", game ends";
 							broadcast(player_it->conn, msg);
-						}
-						
+						}						
 					} else { //not playing
 						string tmp_room_id = user_it->second->room_id;
 					
@@ -730,8 +687,7 @@ string MAINSERVER::leave(string recv, string &cur_username, int conn){
 						for (auto player_it : room_it->second->players) {								
 							string msg = cur_username + " leave game room " + tmp_room_id;
 							broadcast(player_it->conn, msg);
-						}
-						
+						}						
 					}
 				} 
 			}			
@@ -739,6 +695,7 @@ string MAINSERVER::leave(string recv, string &cur_username, int conn){
 	}
 	return response;
 }
+
 string MAINSERVER::invite(string recv, string &cur_username, int conn){
 	vector<string> cmd = split (recv, ' ');
 	string response;
@@ -747,11 +704,10 @@ string MAINSERVER::invite(string recv, string &cur_username, int conn){
 		response = "Usage: invite <invitee email>";
 	} else {
 		if (cur_username == "") {
-			cout << "cur_username is \"\"\n";
+			// cout << "cur_username is \"\"\n";
 			response = "You are not logged in";
 		} else {
-			cout << "cur_username is " << cur_username << "\n";
-			
+			// cout << "cur_username is " << cur_username << "\n";
 			map<string, USR_INFO*>::iterator user_it;
 			user_it = usrname.find(cur_username);
 			
@@ -770,7 +726,7 @@ string MAINSERVER::invite(string recv, string &cur_username, int conn){
 					if (!invitee_it->second->login) { // check invitee
 						response = "Invitee not logged in";
 					} else { // success
-						// // send msg to invitee
+						// send msg to invitee
 						string tmp = "You receive invitation from " + user_it->second->name + "<" + user_it->second->email + ">";
 						broadcast(invitee_it->second->conn, tmp);
 						// send msg to inviter
@@ -778,13 +734,12 @@ string MAINSERVER::invite(string recv, string &cur_username, int conn){
 						response = "You send invitation to " + invitee_it->second->name + "<" + invitee_it->second->email + ">";					
 					}
 				}	
-			}
-
-			
+			}		
 		}	
 	}
 	return response;
 }
+
 string MAINSERVER::accept(string recv, string &cur_username, int conn){
 	vector<string> cmd = split (recv, ' ');
 	string response;
@@ -797,8 +752,6 @@ string MAINSERVER::accept(string recv, string &cur_username, int conn){
 			response = "You are not logged in";
 		} else {
 			// cout << "cur_username is " << cur_username << "\n";
-			// map<string, ROOM*>::iterator room_it;
-			// room_it = rooms.find(cmd[2]);
 			map<string, USR_INFO*>::iterator user_it;
 			user_it = usrname.find(cur_username);
 
@@ -832,6 +785,7 @@ string MAINSERVER::accept(string recv, string &cur_username, int conn){
 	}
 	return response;
 }
+
 void MAINSERVER::broadcast(int conn, string msg){
 	cout << "broadcast to " << conn << ": " << msg << "\n";
 	msg+="\n";
@@ -881,6 +835,7 @@ public:
 		TCPcommunicate();
 		TCPclose();
     }
+
     void TCPcommunicate() {
         while (1) {
             if( (connfd = accept(TCPsock, (struct sockaddr*)NULL, NULL)) == -1){
@@ -895,23 +850,21 @@ public:
             
         }
     }
-    void TCPclose() {
-        
+
+    void TCPclose() {    
         close(TCPsock);
     }
+
 	void handle(int connfd){ // each thread
 		signal(SIGPIPE, SIG_IGN);
 		
-		string cur_username = ""; //for accessing the map in mp
+		string cur_username = ""; 
 
 		char buf[MAXLINE] = {0};
 		string welMsg = "*****Welcome to Game 1A2B*****";
 		memset(buf, 0, sizeof(buf));
 		strcpy(buf, welMsg.c_str());
-		// if ((send(connfd, buf, sizeof(buf), 0)) < 0) {
-		// 	printf("\tTCP sends response failed\n");
-		// 	return;
-		// }
+		
 		while(1){
 			memset(buf,0,sizeof(buf));
 			int n = recv(connfd, buf, MAXLINE, 0);
@@ -967,7 +920,6 @@ public:
 			}
 		}
 		close(connfd);
-
 	}
 };
 
@@ -980,8 +932,8 @@ class UDP {
 public:
 	MAINSERVER *mserver;
 	int UDPsock;
-	sockaddr_in UDPservaddr; // server address
-	sockaddr_in UDPclientaddr; // client address
+	sockaddr_in UDPservaddr;
+	sockaddr_in UDPclientaddr;
 	socklen_t UDPaddrlen = sizeof(UDPclientaddr);
 	
 	UDP(MAINSERVER *mp){
@@ -1034,7 +986,7 @@ public:
 				} else {
 					response = "unknown command";
 				}
-			} else { // "unknown command"
+			} else { 
 				response = "unknown command";
 			}
 			response+="\n";
@@ -1045,6 +997,7 @@ public:
 			cout<<"udp send: "<<sendbuf<<";\n";
 		}
 	}
+
 	void UDPclose() {	
 		close(UDPsock);
 	}
@@ -1055,7 +1008,6 @@ int main() { //int argc, char const *argv[]
 
 	// if (argc != 2){
 	// 	printf("Usage: ./server <port>\n"); return 0;}
-
 	// args.argc = argc; 
 	// args.argv = argv;
 
